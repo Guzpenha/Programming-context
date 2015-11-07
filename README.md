@@ -1,2 +1,2 @@
-# Programming content problems
-My recent programming content problems implementation, started in 11/29/2015
+# Programming contest problems
+My recent programming competition problems implementation, started in 11/29/2015
