@@ -1,13 +1,21 @@
+
+//Unfinished
+
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
 #include <vector>
 #include <unordered_map>
+#include <limits>
+#include <algorithm>
+#include <list>
+#include <queue>
 
 #define PVI(X) for(int x=0;x<X.size();x++){printf("%d ",X[x]);}printf("\n");
 #define SZ(X) ((int)(X).size())
 #define ALL(X) (X).begin(), (X).end()
 #define REP(I, N) for (int I = 0; I < (N); ++I)
+#define REPM(I, N) for(auto I = (N.begin()); I != N.end();I++)
 #define REPP(I, A, B) for (int I = (A); I < (B); ++I)
 #define RI(X) scanf("%d", &(X))
 #define RII(X, Y) scanf("%d%d", &(X), &(Y))
@@ -17,7 +25,7 @@
 #define DRII(X, Y) int X, Y; scanf("%d%d", &X, &Y)
 #define DRIII(X, Y, Z) int X, Y, Z; scanf("%d%d%d", &X, &Y, &Z)
 #define DRIIII(X, Y, Z, K) int X, Y, Z, K; scanf("%d%d%d%d", &X, &Y, &Z, &K)
-#define RS(X) scanf("%s", (X))
+#define RS(X) scanf("%c", (X))
 #define CASET int ___T, case_n = 1; scanf("%d ", &___T); while (___T-- > 0)
 #define CASENZ int ___T, case_n = 1; scanf("%d ", &___T); while (___T != 0)
 #define MP make_pair
@@ -29,33 +37,36 @@
 #define S second
 using namespace std;
 
+struct comp{
+ 	bool operator()(const pair<int,int>& s1, const pair<int,int>& s2){
+		return s1.S>s2.S;
+  }
+};
 
-vector<int> dijkstra(int exitPos, vector< vector< int > > graph ){
-	vector<int> pathsLength;
 
-	// pair<int,int> popped;
-	// vector< pair<int,int> > fronteira;
-	// vector<int> dist(V,MAXINT/2);
-	// dist[from]=0;
-	// fronteira.PB(MP(0,from));
-	// make_heap(fronteira.begin(),fronteira.end(),Comp());
+vector<int> dijkstra(int from, vector< list< unsigned int > > graph ){
+	vector<int> paths(SZ(graph),1001);
+	queue< pair<int,int> > fronteira;
+	pair<int,int> popped;
+	vector<bool> addedToFrontier(SZ(graph),false);
+	fronteira.push(MP(from,0));
+	// make_heap(fronteira.begin(),fronteira.end(),comp());
 
-	// while(fronteira.size()!=0){
-	// 	popped = fronteira.front();
-	// 	pop_heap (fronteira.begin(),fronteira.end()); fronteira.pop_back();
-	// 	REP(i,V){
-	// 		if(graph[popped.S][i]>-1){
-	// 			if(dist[i]>dist[popped.S]+graph[popped.S][i]){
-	// 				dist[i]=dist[popped.S]+graph[popped.S][i];
-	// 				fronteira.PB(MP(dist[i],i));
-	// 				push_heap(fronteira.begin(),fronteira.end(),Comp());
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// return dist[to];
-
-	return pathsLength;
+	while(!fronteira.empty()){
+		popped = fronteira.front();
+		// pop_heap(fronteira.begin(),fronteira.end()); 
+		fronteira.pop();
+		paths[popped.F] = popped.S;		
+		REPM(it,graph[popped.F]){						
+			int i= (*it);
+			if(!addedToFrontier[i] && (paths[popped.F]+1) < paths[i]){
+				fronteira.push(MP(i,(popped.S+1)));	
+				// push_heap(fronteira.begin(),fronteira.end(),comp());									
+				addedToFrontier[i] = true;
+			}			
+		}
+	}
+	return paths;
 }
 
 
@@ -65,66 +76,64 @@ int main(){
 	REP(i,r){
 		REP(j,c){
 			char cell;
-			cin>>cell;
-			matrix[r][c] = cell;			
+			scanf(" %c",&cell);
+			matrix[i][j] = cell;			
 		}
-	}
+	}	
 
 	//map to graph
 	int pos = 0;
-	unordered_map<int,int> breeders;
+	vector<pair<int,int> >  breeders;
 	int initialPos = 0, exitPos =0;
-	vector< vector< int > > graph((r*c),vector< int >((r*c),0));
+	vector< list< unsigned int > > graph((r*c));
 	REP(i,r){
 		REP(j,c){	
 			if(matrix[i][j]!='T'){
-				if(stoi(matrix[i][j])>0){
-					breeders[pos]= stoi(matrix[i][j]);
-				}else if(matrix[i][j]=='S'){
+				if(matrix[i][j]=='S'){
 					initialPos= pos;
 				}else if(matrix[i][j]=='E'){
 					exitPos =pos;
+				}else if((matrix[i][j]-'0')>0){
+					breeders.PB(MP(pos,(matrix[i][j]-'0')));
 				}
-				//to the right
-				if(i+1<r){
-					if(matrix[i+1][j]!='T'){
-						graph[pos][pos+1] = 1;
-						graph[pos+1][pos] = 1;
+				// to the right
+				if(j+1<c){
+					if(matrix[i][j+1]!='T'){
+						graph[pos].PB(pos+1);
+						graph[pos+1].PB(pos);
 					}				
 				}			
 				//left
+				if(j-1>=0){
+					if(matrix[i][j-1]!='T'){
+						graph[pos].PB(pos-1);
+						graph[pos-1].PB(pos);
+					}
+				}
+				//down
+				if(i+1<r){
+					if(matrix[i+1][j]!='T'){						
+						graph[pos].PB(pos+(c));
+						graph[pos+(c)].PB(pos);	
+					}
+				}
 				if(i-1>=0){
 					if(matrix[i-1][j]!='T'){
-						graph[pos][pos-1] = 1;
-						graph[pos-1][pos] = 1;
+						graph[pos].PB(pos-c);
+						graph[pos-c].PB(pos);	
 					}
 				}
-				//up
-				if(j+1<c){
-					if(matrix[i][j+1]!='T'){
-						graph[pos][pos+(i*r)] = 1;
-						graph[pos+(i*r)][pos] = 1;	
-					}
-				}
-				if(j-1>=0){
-					if(matrix[i][j-]!='T'){
-						graph[pos][pos-(i*r)] = 1;
-						graph[pos-(i*r)][pos] = 1;	
-					}
-				}
-				pos++;			
 			}
+			pos++;			
 		}
 	}
-
-		
+	int ans=0;
 	vector<int> paths = dijkstra(exitPos,graph);
-
-	int ans =0;
-	REPM(it,breeders){
-		if(paths[(*it).F] <= path[initialPos]){
-			ans+=(*it).S;
-		}
+	int distanceAsh =  paths[initialPos];
+	REP(i,breeders.size()){
+	 int distanceBreeder = paths[breeders[i].F];
+	 if(distanceAsh>=distanceBreeder)
+	 		ans+= breeders[i].S;
 	}
 	cout<<ans<<endl;
 	return 0;
